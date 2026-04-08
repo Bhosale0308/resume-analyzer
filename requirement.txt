@@ -1,5 +1,5 @@
 flask
-flask_sqlalchemy
+Flask-SQLAlchemy
 PyPDF2
 reportlab
 gunicorn
