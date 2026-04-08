@@ -4,10 +4,16 @@ from flask_sqlalchemy import SQLAlchemy
 from flask import redirect
 import PyPDF2
 import os
+app = Flask(__name__)
+basedir = os.path.abspath(os.path.dirname(__file__))
+
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'data.db')
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['MAX_CONTENT_LENGTH'] = 5 * 1024 * 1024
 print("DB PATH:", os.getcwd())
 print("FULL PATH:", os.path.abspath("data.db"))
 
-app = Flask(__name__)   # ✅ FIRST create app
+
 
 # ✅ THEN configure database
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///data.db'
@@ -119,16 +125,20 @@ def create_db():
 
 @app.route('/history')
 def history():
-    search = request.args.get('search')
+    try:
+        search = request.args.get('search')
 
-    if search:
-        data = Resume.query.filter(
-            Resume.job_role.contains(search)
-        ).all()
-    else:
-        data = Resume.query.all()
+        if search:
+            data = Resume.query.filter(
+                Resume.job_role.contains(search)
+            ).all()
+        else:
+            data = Resume.query.all()
 
-    return render_template('history.html', data=data)
+        return render_template('history.html', data=data)
+
+    except Exception as e:
+        return f"Error: {e}"
 @app.route('/delete/<int:id>')
 def delete(id):
     data = Resume.query.get(id)
@@ -163,7 +173,8 @@ from reportlab.lib.styles import getSampleStyleSheet
 @app.route('/download/<int:id>')
 def download(id):
     resume = Resume.query.get(id)
-
+    if not resume:
+        return "Resume not found"
     file_name = f"report_{id}.pdf"
     doc = SimpleDocTemplate(file_name)
 
@@ -178,7 +189,10 @@ def download(id):
     doc.build(content)
 
     return f"PDF Generated: {file_name}"
-with app.app_context():
+@app.before_first_request
+def create_tables():
     db.create_all()
+# with app.app_context():
+#     db.create_all()
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run()
