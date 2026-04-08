@@ -16,7 +16,7 @@ print("FULL PATH:", os.path.abspath("data.db"))
 
 
 # ✅ THEN configure database
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///data.db'
+
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
@@ -122,7 +122,6 @@ def analyze():
 def create_db():
     db.create_all()
     return "Database Created!"
-
 @app.route('/history')
 def history():
     try:
@@ -139,6 +138,7 @@ def history():
 
     except Exception as e:
         return f"Error: {e}"
+
 @app.route('/delete/<int:id>')
 def delete(id):
     data = Resume.query.get(id)
